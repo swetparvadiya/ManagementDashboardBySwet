@@ -1,10 +1,20 @@
-import {createStore, applyMiddleware }from "redux";
-import logger from "redux-logger";
-import thunk from "redux-thunk";
-import rootReducer from "./rootReducer";
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./slice/authSlice";
 
-const middleware = [thunk];
-if(process.env.NODE_ENV === "DEVELOPMENT"){
-    middleware.push(logger);
-}
-export const store = createStore(rootReducer, applyMiddleware(...middleware));
+
+// import { createStore, applyMiddleware } from "redux";
+// import logger from "redux-logger";
+// import createSagaMiddleware from "@redux-saga/core";
+// import rootSaga from "./sagas";
+
+// const sagaMiddleware= createSagaMiddleware();
+
+// const middleware = [sagaMiddleware];
+
+
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+  },
+});
+
