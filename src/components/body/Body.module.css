@@ -1,0 +1,44 @@
+.main {
+    width: 75%;
+    float: left;
+    padding: 15px;
+    border: 1px solid red;
+  }
+  .main2{
+    display: flex;
+    flex-direction: row;   
+    
+  }
+
+  .mobile{
+    font-size: 60px;
+    margin-left: 20px;
+    width: 60%;
+    display: flex;
+    flex-direction: row;   
+    
+  }  
+  .image{
+    margin-left: 10px;
+    width: 40px;
+  }
+  .invite{
+
+    display: flex;
+    flex-direction: row;
+  }
+  .invite2{
+    width: 30px;
+    margin-left: 200px;
+  }
+  .invite3{
+    margin-top: 15px;
+    margin-left: 15px;
+    font-size: xx-large;
+  }
+  .invite4{
+    width: 130px;
+    margin-left: 15px;
+}
+
+

@@ -1,7 +1,11 @@
 // import firebase from "firebase/app";
 import "firebase/auth";
 import { initializeApp } from "firebase/app";
+<<<<<<< Updated upstream:src/redux/firebase.js
 import { getAuth } from "firebase/auth";
+=======
+
+>>>>>>> Stashed changes:src/firebase/firebase.js
 
 const firebaseConfig = {
     apiKey: "AIzaSyDzQLU1t8TbiDjFTG95Y06hwODWxan5OJg",
@@ -13,7 +17,11 @@ const firebaseConfig = {
   };
 const  firebase = initializeApp(firebaseConfig);
 
+<<<<<<< Updated upstream:src/redux/firebase.js
   const auth = getAuth;
   // const googleAuthProvider = new firebase.auth.googleAuthProvider();
   
   export {auth};
+=======
+  export const app = initializeApp(firebaseConfig);
+>>>>>>> Stashed changes:src/firebase/firebase.js
