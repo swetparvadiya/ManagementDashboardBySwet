@@ -1,21 +1,44 @@
-
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import './App.css';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-
+import { onAuthStateChanged } from 'firebase/auth'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Route, Routes } from 'react-router-dom'
+import Home from './components/Home'
+import { LoadingScreen } from './components/LoadingScreen'
+import Login from './components/Login'
+import { auth } from './firebase/firebase-config'
+import { setLoading, signInUser } from './store/userSlice'
 
 function App() {
-  return (
-      <BrowserRouter>
-        <Routes>
-          <Route exact path="/" element={<Home/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/register" element={<Register/>} />
-        </Routes>
-      </BrowserRouter>
-  );
+	
+	
+	const dispatch = useDispatch()
+	const loading = useSelector((state) => state.user.loading)
+	useEffect(() => {
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
+			if (user) {
+				const { email, displayName, photoURL, uid } = user
+				dispatch(signInUser({ email, displayName, photoURL, uid }))
+			} else dispatch(setLoading(false))
+		})
+		return unsubscribe
+	}, [])
+
+
+	return (
+		<div>
+			{loading ? (
+				<LoadingScreen />
+			) : (
+				<Routes>
+					<Route path='/' element={<Home />} />
+					<Route path='/login' element={<Login />} />
+
+
+
+				</Routes>
+			)}
+		</div>
+	)
 }
 
 export default App;

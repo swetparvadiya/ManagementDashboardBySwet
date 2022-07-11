@@ -1,0 +1,63 @@
+.checklist {
+    margin: 0;
+    padding-left: 10px;
+    display: inline;
+  }
+
+.main{
+    width: 250px;
+    margin-top: 20px;
+    border-radius: 1px;
+    border-right: 1px;
+}
+
+  .checklist li {
+    position: relative;
+    list-style-type: none;
+    padding-left: 1.4rem;
+    margin-bottom: 0.5rem;
+    margin-left: 10px;
+    font-size: larger;
+
+  }
+  
+  .checklist li:before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0;
+      width: 5px;
+      height: 11px;
+
+  }
+  
+  
+.down{
+    padding-bottom:40px ;
+}
+  
+  
+  .section {
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+  }
+  .image{
+    margin-right: 20px;
+    margin-bottom: -5px;
+  }
+  .project{
+    margin-top: 10px;
+    font-size: larger;
+    margin-left: 32px;
+    margin-bottom: 100px;
+  }
+  .image12{
+    align-items: flex-end;
+    margin-left: 96px;
+    width: 10px;
+    
+  }
+
+  

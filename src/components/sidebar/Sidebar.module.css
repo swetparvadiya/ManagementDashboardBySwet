@@ -1,0 +1,107 @@
+.maincontainer {
+    background: #ffffff;
+    box-shadow: 0px 44px 84px 6px #d8d9db;
+    border-radius: 30px;
+    display: flex;
+
+  }
+  .sidebar {
+    width: 250px;
+    height: 10vh;
+  }
+  
+
+  .sidebar .sidebarHeader .sidebarHeaderContent {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 32px 0px 32px 0px;
+    margin-top: -95px;
+}
+  .sidebar .sidebarHeader .sidebarHeaderContent .sidebarContent {
+    display: flex;
+  }
+  .sidebar
+    .sidebarHeader
+    .sidebarHeaderContent
+    .sidebarContent
+    .sidebarHeaderContentText {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
+    color: #0d062d;
+    padding-left: 11px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarHome,
+  .sidebarTasks,
+  .sidebarSettings,
+  .sidebarMembers {
+    display: flex;
+    margin-left: 24px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarHome {
+    margin-top: 33px;
+  }
+  .sidebar .sidebarMenu .sidebarTasks {
+    margin-top: 79px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarMembers {
+    margin-top: 32px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarSettings {
+    margin-top: 32px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarLine {
+    width: 224px;
+    height: 0px;
+    border: 1px solid #dbdbdb;
+    margin: 34px 13px 30px 13px;
+  }
+  
+  .sidebar .sidebarMenu .sidebarMenuContentText {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 19px;
+    color: #787486;
+    margin-left: 15px;
+  }
+  
+  .sidebar .sidebarProjects .addProject {
+    display: flex;
+    margin-left: 22px;
+  }
+  
+  .sidebar .sidebarProjects .addProject p {
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 15px;
+    text-transform: uppercase;
+    color: #787486;
+    margin-right: 101px;
+  }
+  
+  .sidebar .sidebarProjects .projectContent .projectDetails {
+    display: flex;
+    align-items: center;
+    margin: 31px 0px 30px 24px;
+  }
+  
+  .sidebar .sidebarProjects .projectContent .projectIndex {
+    width: 8px;
+    height: 8px;
+    background: #ffa500;
+    border-radius: 50%;
+    margin-right: 16px;
+  }
+  
+  .sidebar .sidebarProjects .projectContent .projectName {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 19px;
+    color: #787486;
+  }

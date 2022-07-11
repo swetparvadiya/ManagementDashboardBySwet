@@ -1,0 +1,11 @@
+.checklist {
+    margin: 0;
+    padding-left: 10px;
+    display: inline;
+  }
+  .list{
+    margin-left: 45px;
+    font-size: larger;
+    margin-bottom: 5px;
+    
+  }

@@ -1,0 +1,12 @@
+.main{
+    display: flex;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+.filter{
+    padding: 5px;
+    margin-left: 5px;
+    font-size: larger;
+
+}
