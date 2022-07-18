@@ -1,536 +1,381 @@
-import { React, useEffect } from "react";
-import styles from "./dashboard.module.css";
-import downarrow from "../../assets/downarrow.svg";
-import { bodyChange } from "../../action/body";
-import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import files from "../../assets/files.png";
-import comments from "../../assets/comments.png";
+import React, { useState, useEffect } from "react";
+import styles from "./card.module.css";
 import editdeleteproject from "../../assets/editdeleteproject.svg";
-import inviteuser from "../../assets/inviteuser.svg";
-import editIcon from "../../assets/editIcon.svg";
-import linkIcon from "../../assets/linkIcon.svg";
-import calendar from "../../assets/calendar.svg";
-import filterIcon from "../../assets/filterIcon.svg";
-import users from "../../assets/users.svg";
-import user from "../../assets/user.png";
+import { useParams } from "react-router-dom";
+import user from "../../assets/users.svg";
+import comments from "../../assets/comments.png";
+import files from "../../assets/files.png";
+import addProject from "../../assets/addProject.svg";
+
+import { useDispatch, useSelector } from "react-redux";
 import {
-  query,
-  collection,
-  getDocs,
-  where,
   addDoc,
+  collection,
+  getDoc,
+  getDocs,
+  getFirestore,
   updateDoc,
   doc,
-  deleteDoc,
 } from "firebase/firestore";
-import { db } from "../../firebase";
-import { useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
-import { Fetch_Task } from "../../action/body";
-const TaskDetail = () => {
-  const [classname, setSetClassName] = useState(false);
-  const [taskId, setTaskId] = useState();
-  const [onProgressData, setOnProgressData] = useState([]);
-  const [doneData, setDoneData] = useState([]);
-  const [onTodoData, setOnTodoData] = useState([]);
-  const dispatch = useDispatch();
-  const taskDetail = useSelector((state) => state.taskReducer);
-  const slug = useParams();
-  const projectDetail = useSelector((state) => state.projectReducer);
-  const currentProject = projectDetail.find(
-    (item) => item.id === slug.projectId
-  );
+import {
+  addbody,
+  bodyChange,
+  discriptionChange,
+  selectChange,
+} from "../../action/body";
 
-  const fetchTaskData = async () => {
-    try {
-      const q = query(collection(db, "task"));
-      const doc = await getDocs(q);
-      // const data = doc.docs[0].data();
-      // const dataId = doc.docs[0].id;
-      doc.forEach((doc) => {
-        dispatch(Fetch_Task(doc.data()));
-      });
-    } catch (err) {
-      console.error(err);
-    }
+import { app } from "../../firebase";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import uuid from "uuid/v4";
+const Card = () => {
+  const db = getFirestore(app);
+  const slug = useParams();
+
+  const bodys = useSelector((store) => store.bodyRed);
+  const currentProject = bodys.filter((item) => item.projectId === slug.id);
+  const itemsFromBackend = [];
+
+  const columnsFromBackend = {
+    [uuid()]: {
+      name: "Requested",
+      items: itemsFromBackend,
+    },
+    [uuid()]: {
+      name: "To do",
+      items: [],
+    },
+    [uuid()]: {
+      name: "Completed",
+      items: [],
+    },
   };
 
   useEffect(() => {
-    fetchTaskData();
+    setColumns({
+      [uuid()]: {
+        name: "TODO",
+        status: "to-do",
+        items: currentProject,
+        dot: "tododot",
+        progress: "todopro",
+        nam: "todonam",
+        im: "todoim",
+      },
+      [uuid()]: {
+        name: "ONPROGRESS",
+        status: "on-progress",
+        items: [],
+        dot: "progressdot",
+        progress: "onpro",
+        nam: "onnam",
+        im: "onprogressim",
+      },
+      [uuid()]: {
+        name: "Completed",
+        status: "completed",
+        items: [],
+        dot: "completedDot",
+        progress: "compro",
+        nam: "comnam",
+        im: "completedim",
+      },
+    });
+  }, [currentProject.length]);
+  const [columns, setColumns] = useState(columnsFromBackend);
+
+  const getData = async () => {
+    const snapshot = await getDocs(collection(db, "TASK"));
+    snapshot.forEach((doc) => {
+      const { body, discription, projectId, select, status } = doc.data();
+      dispatch(addbody(doc.id, body, discription, projectId, select, status));
+    });
+  };
+
+  const onDragEnd = async (result, columns) => {
+    if (!result.destination) return;
+    const { source, destination, draggableId } = result;
+
+    if (source.droppableId !== destination.droppableId) {
+      const sourceColumn = columns[source.droppableId];
+      const destColumn = columns[destination.droppableId];
+      const sourceItems = [...sourceColumn.items];
+      const destItems = [...destColumn.items];
+      const [removed] = sourceItems.splice(source.index, 1);
+      destItems.splice(destination.index, 0, removed);
+    } else {
+      const column = columns[source.droppableId];
+      const copiedItems = [...column.items];
+      const [removed] = copiedItems.splice(source.index, 1);
+      copiedItems.splice(destination.index, 0, removed);
+    }
+
+    const data = await getDoc(doc(db, "TASK", draggableId));
+    const taskDocRef = doc(db, "TASK", draggableId);
+
+    await updateDoc(taskDocRef, {
+      status: columns[result.destination.droppableId].status,
+    });
+
+    await getData();
+  };
+
+  const [added, setAdded] = useState(false);
+
+  const body = useSelector((store) => store.body);
+  const discription = useSelector((store) => store.discription);
+  const select = useSelector((store) => store.select);
+
+  useEffect(() => {
+    try {
+      getData();
+    } catch (err) {
+      console.log(err.message);
+    }
   }, []);
 
-  const [taskData, setTaskData] = useState([]);
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    let taskdata = taskDetail.filter(
-      (item) => item.projectId === slug.projectId
-    );
-    setTaskData(taskdata);
-  }, [taskDetail, slug]);
-
-  const getProjectId = (id) => {
-    setTaskId(id);
+  const handleSubmit = (e) => {
+    addToDB(body, discription, select);
+    setAdded(true);
+    setTimeout(() => {
+      setAdded(false);
+    }, 2000);
+    dispatch(bodyChange(""));
+    dispatch(discriptionChange(""));
+    dispatch(selectChange(""));
   };
 
-  const onDragEnd = async (result) => {
-    const { source, destination, draggableId } = result;
-    if (source.droppableId === "Todo") {
-      const data = onTodoData.filter((item) => item.id !== draggableId);
-      setOnTodoData(data);
-    }
-    if (source.droppableId === "onProgress") {
-      const data = onProgressData.filter((item) => item.id !== draggableId);
-      setOnProgressData(data);
-    }
-    if (source.droppableId === "done") {
-      const data = doneData.filter((item) => item.id !== draggableId);
-      setDoneData(data);
-    }
-    if (destination.droppableId === "Todo") {
-      const data = taskData.find((item) => item.id === draggableId);
-      data.status = "Todo";
-      const q = query(collection(db, "task"), where("id", "==", draggableId));
-      const querySnapshot = await getDocs(q);
-      let docId;
-      querySnapshot.forEach((doc) => {
-        docId = doc.id;
-      });
-      const collectionRef = doc(db, "task", docId);
-      await updateDoc(collectionRef, {
-        status: "Todo",
-        taskname: data.taskname,
-        taskdescription: data.taskdescription,
-        taskpriority: data.taskpriority,
-      });
-      dispatch(bodyChange(data));
-    }
-    if (destination.droppableId === "onProgress") {
-      const data = taskData.find((item) => item.id === draggableId);
-      data.status = "onProgress";
-      const q = query(collection(db, "task"), where("id", "==", draggableId));
-      const querySnapshot = await getDocs(q);
-      let docId;
-      querySnapshot.forEach((doc) => {
-        docId = doc.id;
-      });
-      const collectionRef = doc(db, "task", docId);
-      await updateDoc(collectionRef, {
-        status: "onProgress",
-        taskname: data.taskname,
-        taskdescription: data.taskdescription,
-        taskpriority: data.taskpriority,
-      });
-      dispatch(bodyChange(data));
-    }
-    if (destination.droppableId === "done") {
-      const data = taskData.find((item) => item.id === draggableId);
-      data.status = "done";
-      const q = query(collection(db, "task"), where("id", "==", draggableId));
-      const querySnapshot = await getDocs(q);
-      let docId;
-      querySnapshot.forEach((doc) => {
-        docId = doc.id;
-      });
-      const collectionRef = doc(db, "task", docId);
-      await updateDoc(collectionRef, {
-        status: "done",
-        taskname: data.taskname,
-        taskdescription: data.taskdescription,
-        taskpriority: data.taskpriority,
-      });
-      dispatch(bodyChange(data));
+  const addToDB = async (body, discription) => {
+    const addRef = await addDoc(collection(db, "TASK"), {
+      id: uuid(),
+      body: body,
+      discription: discription,
+      projectId: slug.id,
+      select: select,
+      status: "to-do",
+    });
+    showDataAfterSubmit(addRef.id);
+  };
+
+  const showDataAfterSubmit = async (id) => {
+    const docRef = await getDoc(doc(db, "TASK", id));
+
+    if (docRef.exists()) {
+      const { body, discription, projectId, select } = docRef.data();
+      dispatch(addbody(docRef.id, body, discription, projectId, select));
     }
   };
 
-  useEffect(() => {
-    if (taskData) {
-      const onpData = taskData.filter((item) => item.status === "onProgress");
-      setOnProgressData(onpData);
-    }
-  }, [taskData]);
-
-  useEffect(() => {
-    const ontData = taskData.filter((item) => item.status === "Todo");
-    setOnTodoData(ontData);
-  }, [taskData]);
-
-  useEffect(() => {
-    const doneData = taskData.filter((item) => item.status === "done");
-    setDoneData(doneData);
-  }, [taskData]);
+  const handlebodyChange = (e) => {
+    dispatch(bodyChange(e.target.value));
+  };
+  const handlediscriptionChange = (e) => {
+    dispatch(discriptionChange(e.target.value));
+  };
+  const handleselectChange = (e) => {
+    dispatch(selectChange(e.target.value));
+  };
 
   return (
-    <>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className={styles.projectnameandinvite}>
-          <div className={styles.projectInfo}>
-            {currentProject ? <p>{currentProject.projectname}</p> : ""}
-            <img src={editIcon} alt="noediticonimage" />
-            <img src={linkIcon} alt="nolinkiconimage" />
-          </div>
-          <div className={styles.inviteuserinfo}>
-            <img
-              src={inviteuser}
-              alt="noinviteuserimage"
-              className={styles.inviteuserimage}
-            />
-            <p>Invite</p>
-            <img src={users} alt="nousersimage" className={styles.usersimage} />
-          </div>
-        </div>
-        <div className={styles.filtersection}>
-          <div className={styles.filter}>
-            <img
-              src={filterIcon}
-              alt="nofiltericonimage"
-              className={styles.filtericonimage}
-            />
-            <p>Filter</p>
-            <img
-              src={downarrow}
-              alt="nodownarrowimage"
-              className={styles.downarrowimage}
-            />
-          </div>
-          <div className={styles.filterbydate}>
-            <img
-              src={calendar}
-              alt="nocalendarimage"
-              className={styles.calendarimage}
-            />
-            <p>Today</p>
-            <img
-              src={downarrow}
-              alt="nodownarrowimage"
-              className={styles.downarrowimage}
-            />
-          </div>
-        </div>
-        <div className={styles.tasksection}>
-          <Droppable droppableId="Todo">
-            {(provided) => (
-              <div
-                className={styles.todosection}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                <div className={styles.todoHeader}>
-                  <p className={styles.tododot}></p>
-                  <p className={styles.todotext}>To Do</p>
-                  <p className={styles.todolength}>{onTodoData.length}</p>
+    <div style={{ display: "flex", justifyContent: "center", height: "100%" }}>
+      <DragDropContext
+        onDragEnd={(result) => onDragEnd(result, columns, setColumns)}
+      >
+        {Object.entries(columns).map(([columnId, column], index) => {
+          return (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                marginRight: "15px",
+                alignItems: "center",
+                backgroundColor: "#F5F5F5",
+              }}
+              key={columnId}
+            >
+              <div>
+                <p className={styles[column.dot]}></p>
+                <p className={styles[column.nam]}>{column.name}</p>
+                <div className={styles[column.im]}>
                   <img
-                    src={inviteuser}
-                    alt="noinviteuserimage"
-                    className={styles.todoimage}
+                    src={addProject}
+                    alt=""
                     type="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#exampleTaskModal"
+                    id12="dropdownMenuButton1"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
                   />
-                </div>
-                <p className={styles.todoline}></p>
-                {onTodoData.length > 0 ? (
-                  onTodoData.map((item, index) => (
-                    <Draggable draggableId={item.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className={`${styles.task} ${
-                            classname && "dragtask"
-                          }`}
-                          key={index}
-                          index={index}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
+                  <ul
+                    className="dropdown-menu"
+                    aria-labelledby="dropdownMenuButton1"
+                  >
+                    <li>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="body"
+                          id="body"
+                          value={body}
+                          onChange={handlebodyChange}
+                        />
+                        <textarea
+                          type="text"
+                          placeholder="discription"
+                          id="discription"
+                          value={discription}
+                          onChange={handlediscriptionChange}
+                        />
+                        <select
+                          name="status"
+                          id="status"
+                          value={select}
+                          onChange={handleselectChange}
                         >
-                          <div className={styles.taskHeader}>
-                            <div className={styles.taskPriority}>
-                              <p className={styles.taskpriorityText}>
-                                {item.taskpriority}
-                              </p>
-                            </div>
-                            <img
-                              src={editdeleteproject}
-                              alt="noeditdeletetask"
-                              className="dropdown-toggle"
-                              type="button"
-                              id="dropdownMenuButton1"
-                              data-bs-toggle="dropdown"
-                              aria-expanded="false"
-                            />
-                            <ul
-                              className="dropdown-menu"
-                              aria-labelledby="dropdownMenuButton1"
-                            >
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleTaskEditModal"
-                                  onClick={() => getProjectId(item.id)}
-                                >
-                                  Edit Task
-                                </p>
-                              </li>
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleDeleteTaskModal"
-                                  onClick={() => getProjectId(item.id)}
-                                >
-                                  Delete Task
-                                </p>
-                              </li>
-                            </ul>
-                          </div>
-                          <div className={styles.taskName}>{item.taskname}</div>
-                          <div className={styles.taskDescription}>
-                            {item.taskdescription}
-                          </div>
-                          <div className={styles.taskFooter}>
-                            <img
-                              src={user}
-                              alt="nouserImage"
-                              className={styles.userImage}
-                            />
-                            <div className={styles.comments}>
-                              <img
-                                src={comments}
-                                alt="nocommentsImage"
-                                className={styles.commentsImage}
-                              />
-                              <p className={styles.commentsText}>12 comments</p>
-                            </div>
-                            <div className={styles.files}>
-                              <img
-                                src={files}
-                                alt="nofilesImage"
-                                className={styles.filesImage}
-                              />
-                              <p className={styles.filesText}>0 files</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
-                ) : (
-                  <div className={styles.task}>No Task Available</div>
-                )}
-              </div>
-            )}
-          </Droppable>
-          <Droppable droppableId="onProgress">
-            {(provided) => (
-              <div
-                className={styles.onprogresssection}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                <div className={styles.onprogressHeader}>
-                  <p className={styles.onprogressdot}></p>
-                  <p className={styles.onprogresstext}>On Progress</p>
-                  <p className={styles.onprogresslength}>
-                    {onProgressData?.length}
-                  </p>
+                          <option value="select">Select</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                        </select>
+                      </div>
+                      <button onClick={handleSubmit}> Task</button>
+                    </li>
+                  </ul>
                 </div>
-                <p className={styles.onprogressline}></p>
-                {onProgressData.length > 0 ? (
-                  onProgressData.map((item, index) => (
-                    <Draggable draggableId={item.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className={styles.task}
-                          key={index}
-                          index={index}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                        >
-                          <div className={styles.taskHeader}>
-                            <div className={styles.taskPriority}>
-                              <p className={styles.taskpriorityText}>
-                                {item.taskpriority}
-                              </p>
-                            </div>
-                            <img
-                              src={editdeleteproject}
-                              alt="noeditdeletetask"
-                              className="dropdown-toggle"
-                              type="button"
-                              id="dropdownMenuButton1"
-                              data-bs-toggle="dropdown"
-                              aria-expanded="false"
-                            />
-                            <ul
-                              className="dropdown-menu"
-                              aria-labelledby="dropdownMenuButton1"
-                            >
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleEditModal"
-                                >
-                                  Edit Task
-                                </p>
-                              </li>
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleDeleteTaskModal"
-                                  onClick={() => getProjectId(item.id)}
-                                >
-                                  Delete Task
-                                </p>
-                              </li>
-                            </ul>
-                          </div>
-                          <div className={styles.taskName}>{item.taskname}</div>
-                          <div className={styles.taskDescription}>
-                            {item.taskdescription}
-                          </div>
-                          <div className={styles.taskFooter}>
-                            <img
-                              src={user}
-                              alt="nouserImage"
-                              className={styles.userImage}
-                            />
-                            <div className={styles.comments}>
-                              <img
-                                src={comments}
-                                alt="nocommentsImage"
-                                className={styles.commentsImage}
-                              />
-                              <p className={styles.commentsText}>12 comments</p>
-                            </div>
-                            <div className={styles.files}>
-                              <img
-                                src={files}
-                                alt="nofilesImage"
-                                className={styles.filesImage}
-                              />
-                              <p className={styles.filesText}>0 files</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
-                ) : (
-                  <div className={styles.task}>No Task Available</div>
-                )}
+                <div className={styles[column.progress]}></div>
               </div>
-            )}
-          </Droppable>
-          <Droppable droppableId="done">
-            {(provided) => (
-              <div
-                className={styles.donesection}
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                <div className={styles.onprogressHeader}>
-                  <p className={styles.onprogressdot}></p>
-                  <p className={styles.onprogresstext}>On Progress</p>
-                  <p className={styles.onprogresslength}>{doneData?.length}</p>
-                </div>
-                <p className={styles.doneline}></p>
-                {doneData.length > 0 ? (
-                  doneData.map((item, index) => (
-                    <Draggable draggableId={item.id} index={index}>
-                      {(provided) => (
-                        <div
-                          className={styles.task}
-                          key={index}
-                          index={index}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                        >
-                          <div className={styles.taskHeader}>
-                            <div className={styles.taskPriority}>
-                              <p className={styles.taskpriorityText}>
-                                {item.taskpriority}
-                              </p>
-                            </div>
-                            <img
-                              src={editdeleteproject}
-                              alt="noeditdeletetask"
-                              className="dropdown-toggle"
-                              type="button"
-                              id="dropdownMenuButton1"
-                              data-bs-toggle="dropdown"
-                              aria-expanded="false"
-                            />
-                            <ul
-                              className="dropdown-menu"
-                              aria-labelledby="dropdownMenuButton1"
+              <div style={{ margin: 8 }}>
+                <Droppable droppableId={columnId} key={columnId}>
+                  {(provided, snapshot) => {
+                    const currentProject = bodys.filter(
+                      (item) =>
+                        item.projectId === slug.id &&
+                        item.status === column.status
+                    );
+
+                    return (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        style={{
+                          background: snapshot.isDraggingOver
+                            ? "lightblue"
+                            : "#F5F5F5",
+                          padding: 4,
+                          width: 400,
+                          minHeight: 500,
+                        }}
+                      >
+                        {currentProject.map((item, index) => {
+                          console.log("item", item);
+                          return (
+                            <Draggable
+                              key={item.id}
+                              draggableId={item.id}
+                              index={index}
                             >
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleEditModal"
-                                >
-                                  Edit Task
-                                </p>
-                              </li>
-                              <li>
-                                <p
-                                  type="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#exampleDeleteTaskModal"
-                                  onClick={() => getProjectId(item.id)}
-                                >
-                                  Delete Task
-                                </p>
-                              </li>
-                            </ul>
-                          </div>
-                          <div className={styles.taskName}>{item.taskname}</div>
-                          <div className={styles.taskDescription}>
-                            {item.taskdescription}
-                          </div>
-                          <div className={styles.taskFooter}>
-                            <img
-                              src={user}
-                              alt="nouserImage"
-                              className={styles.userImage}
-                            />
-                            <div className={styles.comments}>
-                              <img
-                                src={comments}
-                                alt="nocommentsImage"
-                                className={styles.commentsImage}
-                              />
-                              <p className={styles.commentsText}>12 comments</p>
-                            </div>
-                            <div className={styles.files}>
-                              <img
-                                src={files}
-                                alt="nofilesImage"
-                                className={styles.filesImage}
-                              />
-                              <p className={styles.filesText}>0 files</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
-                ) : (
-                  <div className={styles.task}>No Task Available</div>
-                )}
+                              {(provided, snapshot) => {
+                                return (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                    }}
+                                  >
+                                    <div className={styles.card}>
+                                      <div>
+                                        <div className={styles.sel}>
+                                          {item.select}
+                                        </div>
+                                        <div>
+                                          <h3 className={styles.bod}>
+                                            {item.body}
+                                          </h3>
+                                        </div>
+                                        <img
+                                          src={editdeleteproject}
+                                          alt="noeditdeletetask"
+                                          className={styles.edit}
+                                          id="dropdownMenuButton1"
+                                          data-bs-toggle="dropdown"
+                                          aria-expanded="false"
+                                        />
+
+                                        <ul
+                                          className="dropdown-menu"
+                                          aria-labelledby="dropdownMenuButton1"
+                                        >
+                                          <li>
+                                            <p
+                                              type="button"
+                                              data-bs-toggle="modal"
+                                              data-bs-target="#exampleTaskEditModal"
+                                              id="edit"
+                                            >
+                                              Edit Task
+                                            </p>
+                                          </li>
+                                          <li>
+                                            <p
+                                              type="button"
+                                              data-bs-toggle="modal"
+                                              data-bs-target="#exampleDeleteTaskModal"
+                                              id="delete"
+                                            >
+                                              Delete Task
+                                            </p>
+                                          </li>
+                                        </ul>
+                                      </div>
+                                      <div className={styles.dis}>
+                                        {item.discription}
+                                      </div>
+                                      <img
+                                        src={user}
+                                        alt="nouserImage"
+                                        className={styles.userImage}
+                                      />
+                                      <div>
+                                        <img
+                                          src={comments}
+                                          alt="nocommentsImage"
+                                          className={styles.commentsImage}
+                                        />
+                                        <p className={styles.commentsText}>
+                                          <h6>12 comments</h6>
+                                        </p>
+                                      </div>
+                                      <div className={styles.files}>
+                                        <img
+                                          src={files}
+                                          alt="nofilesImage"
+                                          className={styles.filesImage}
+                                        />
+                                        <p className={styles.filesText}>
+                                          0 files
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    );
+                  }}
+                </Droppable>
               </div>
-            )}
-          </Droppable>
-        </div>
+            </div>
+          );
+        })}
       </DragDropContext>
-    </>
+    </div>
   );
 };
 
-export default TaskDetail;
+export default Card;
