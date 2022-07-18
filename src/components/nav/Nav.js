@@ -1,58 +1,49 @@
 import React from "react";
-import { auth } from "../../firebase/firebase-config";
-import { useDispatch } from "react-redux";
-import { signOutUser } from "../../store/userSlice";
-import styles from "../nav/Nav.module.css";
-
-import { signOut } from "firebase/auth";
-
-
+import styles from "./Nav.module.css";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutInitiate } from "../../redux/actions";
 import downarrow from "../../assets/downarrow.svg";
-
-
-
-
+import User from "../../assets/userimage.svg";
 
 const Nav = (props) => {
-  const dispatch = useDispatch();
+  const currentUser = useSelector((state) => state.user);
 
-  const handleSignOut = async () => {
-    await signOut(auth);
-    dispatch(signOutUser());
+  const dispatch = useDispatch();
+  const handleAuth = () => {
+    if (currentUser) {
+      dispatch(logoutInitiate());
+    }
   };
 
+  const { displayName } = currentUser.currentUser._delegate;
   return (
-    <>
-      <div className={styles.maincontainer}>
-        <div className={styles.maincontainerright}>
-          <div className={styles.maincontainerrightHeader}>
-            <div className={styles.a}>
-              <div className={styles.userText}>
-                <p className={styles.userName}>{props.user.displayName}</p>
-                <p className={styles.userText}>Surat, India</p>
-              </div>
-              <img
-                src={props.user.photoURL}
-                alt='..'
-                className={styles.profileimage}
-              />
-              <div className={styles.dropdown}>
-              <img src={downarrow} alt='nodownarrowimage' />
-                  <div className={styles.dropdowncontent}>
-                  <button onClick={handleSignOut}>Sign out</button>
-                  </div>
-              </div>
-            </div>
-          </div>
-          
+    <div className={styles.border}>
+      <div className={styles.nav}>
+        <div>
+          <p className={styles.userName}>{displayName}</p>
+          <p className={styles.userAddress}>Surat, India</p>
+
+          <img src={User} alt="/" className={styles.profileimage} />
+
+          <img
+            src={downarrow}
+            alt="nodownarrowimage"
+            className={styles.dropdown}
+            type="button"
+            id="dropdownMenuButton1"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          />
+          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li>
+              <p className={styles.logout} onClick={handleAuth}>
+                Logout
+              </p>
+            </li>
+          </ul>
         </div>
       </div>
-    </>
-
-
-
-
-
+    </div>
   );
 };
 

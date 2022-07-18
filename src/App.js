@@ -1,44 +1,44 @@
-import { onAuthStateChanged } from 'firebase/auth'
-import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Route, Routes } from 'react-router-dom'
-import Home from './components/Home'
-import { LoadingScreen } from './components/LoadingScreen'
-import Login from './components/Login'
-import { auth } from './firebase/firebase-config'
-import { setLoading, signInUser } from './store/userSlice'
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import UserRoute from "./components/UserRoute";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { auth } from "./firebase";
+import { setUser } from "./redux/actions";
+import styles from "./App.module.css";
+import Auth from "./pages/Auth";
 
-function App() {
-	
-	
-	const dispatch = useDispatch()
-	const loading = useSelector((state) => state.user.loading)
-	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (user) => {
-			if (user) {
-				const { email, displayName, photoURL, uid } = user
-				dispatch(signInUser({ email, displayName, photoURL, uid }))
-			} else dispatch(setLoading(false))
-		})
-		return unsubscribe
-	}, [])
+const App = () => {
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    auth.onAuthStateChanged((authUser) => {
+      if (authUser) {
+        dispatch(setUser(authUser));
+      } else {
+        dispatch(setUser(null));
+      }
+    });
+  }, [dispatch]);
 
-	return (
-		<div>
-			{loading ? (
-				<LoadingScreen />
-			) : (
-				<Routes>
-					<Route path='/' element={<Home />} />
-					<Route path='/login' element={<Login />} />
+  return (
+    <div>
+      <Routes>
+        <Route element={<UserRoute />}>
+          <Route path="/" exact element={<Home />} />
+        </Route>
+        <Route element={<UserRoute />}>
+          <Route path="/project/:id" element={<Auth />} />
+        </Route>
 
-
-
-				</Routes>
-			)}
-		</div>
-	)
-}
+        <Route path="/Login" element={<Login />} />
+        <Route path="/Register" element={<Register />} />
+      </Routes>
+    </div>
+  );
+};
 
 export default App;
