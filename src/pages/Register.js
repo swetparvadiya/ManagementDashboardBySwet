@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { registerInitiate } from "../redux/action";
+import { useNavigate, Link } from "react-router-dom";
+import styles from "./Register.module.css";
+import { registerInitiate } from "../redux/actions";
 
 const Register = () => {
   const [state, setState] = useState({
@@ -11,8 +13,15 @@ const Register = () => {
     passwordConfirm: "",
   });
 
-  const {currentUser} = useSelector(state => state.user);
+  const { currentUser } = useSelector((state) => state.user);
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate("/");
+    }
+  }, [currentUser, navigate]);
 
   const dispatch = useDispatch();
 
@@ -20,62 +29,80 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if(password !== passwordConfirm){
+    if (password !== passwordConfirm) {
       return;
     }
-  dispatch(registerInitiate(email, password, displayName));
-    setState({email: "", displayName: "", passwordConfirm: "" })
-};
-
-
-  const handleChange = (e) => {
-    let {name, value} = e.target;
-    setState({...state,[name]:value});
+    dispatch(registerInitiate(email, password, displayName));
+    setState({ email: "", displayName: "", password: "", passwordConfirm: "" });
   };
-
+  const handleChange = (e) => {
+    let { name, value } = e.target;
+    setState({ ...state, [name]: value });
+  };
   return (
-    <div id="Reg-form">
-      <form onSubmit={handleSubmit}>
-        <h1>Sign Up</h1>
+    <div>
+      <div id="register-form">
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <h1
+            className="h3 mb-3 font-weight-normal"
+            style={{ textAlign: "center" }}
+          >
+            Sign Up
+          </h1>
 
-        
-        <input
-          type="email"
-          id="useremail"
-          placeholder="Enter email"
-          name="email"
-          onChange={handleChange}
-          value={email}
-          required
-        />
+          <input
+            type="text"
+            id="displayName"
+            className="form-control"
+            name="displayName"
+            placeholder="Full Name"
+            onChange={handleChange}
+            value={displayName}
+            required
+          />
 
-        <input
-          type="password"
-          id="inputpassword"
-          placeholder="Enter password"
-          name="password"
-          onChange={handleChange}
-          value={password}
-          required
-        />
-        <input
-          type="password"
-          id="inputRePassword"
-          placeholder="Confirm password"
-          name="passwordConfirm"
-          onChange={handleChange}
-          value={passwordConfirm}
-          required
-        />
-        <button type="submit">Sign up</button>
-        <hr />
-        <p>Already have account</p>
-        <Link to="/login">
-          <button type="button" btn="btn-signup">
-           Back
+          <input
+            type="email"
+            id="user-email"
+            className="form-control"
+            name="email"
+            placeholder="Email Address"
+            onChange={handleChange}
+            value={email}
+            required
+          />
+
+          <input
+            type="password"
+            id="inputPassword"
+            className="form-control"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+            value={password}
+            required
+          />
+
+          <input
+            type="password"
+            id="inputRePassword"
+            className="form-control"
+            name="passwordConfirm"
+            placeholder="Repeat Password"
+            onChange={handleChange}
+            value={passwordConfirm}
+            required
+          />
+
+          <button className="btn btn-primary mx-auto " type="submit">
+            <i className="fas fa-user-plus"></i> Sign Up
           </button>
-        </Link>
-      </form>
+          <Link to="/login">
+            <i className="fas fa-angle-left"></i> Back
+          </Link>
+        </form>
+        <br />
+      </div>
     </div>
   );
 };
